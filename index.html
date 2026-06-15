@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedido</title>
+  <style>
+    :root {
+      --bg: #f4f4f5;
+      --card: #fff;
+      --text: #16171b;
+      --muted: #73737c;
+      --line: #ededf0;
+      --pink: #fe2c55;
+      --pink-dark: #db1f47;
+      --green: #20b26b;
+      --yellow: #ffb800;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      background: var(--bg);
+    }
+
+    .app {
+      width: min(100%, 430px);
+      min-height: 100vh;
+      background: var(--card);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, .96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .search-row {
+      height: 48px;
+      display: grid;
+      grid-template-columns: 34px 1fr 34px 34px;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+    }
+
+    .icon {
+      border: 0;
+      background: transparent;
+      color: #17181c;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 20px;
+      display: grid;
+      place-items: center;
+    }
+
+    .search {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      border-radius: 999px;
+      background: #f1f1f2;
+      color: #6d6d76;
+      padding: 0 12px;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      height: 42px;
+      align-items: end;
+      padding: 0 6px;
+    }
+
+    .tab {
+      height: 42px;
+      border: 0;
+      background: transparent;
+      color: #61616a;
+      font-size: 12px;
+      font-weight: 700;
+      position: relative;
+    }
+
+    .tab.active {
+      color: #111216;
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      bottom: 0;
+      height: 2px;
+      background: #111216;
+      border-radius: 99px;
+    }
+
+    main {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .screen,
+    .pane {
+      display: none;
+    }
+
+    .screen.active,
+    .pane.active {
+      display: block;
+    }
+
+    .screen {
+      padding-bottom: 92px;
+    }
+
+    .hero {
+      background: #f6f6f7;
+      position: relative;
+    }
+
+    .hero img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      cursor: pointer;
+    }
+
+    .photo-count {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      min-width: 44px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .58);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .gallery-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      width: 34px;
+      height: 42px;
+      border: 0;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(0, 0, 0, .4);
+      color: #fff;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .gallery-btn.prev {
+      left: 10px;
+    }
+
+    .gallery-btn.next {
+      right: 10px;
+    }
+
+    .product-block {
+      padding: 10px 12px 14px;
+      background: #fff;
+    }
+
+    .price-line {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 2px 0 5px;
+    }
+
+    .price {
+      color: var(--pink);
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .old {
+      color: #9a9aa3;
+      font-size: 12px;
+      text-decoration: line-through;
+    }
+
+    .deal {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border-radius: 4px;
+      background: #fff1f4;
+      color: var(--pink);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 0 6px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      line-height: 1.35;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+
+    .sold {
+      color: #777780;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .shipping,
+    .detail-list {
+      margin-top: 10px;
+      display: grid;
+      color: #303138;
+      font-size: 13px;
+    }
+
+    .shipping {
+      gap: 8px;
+    }
+
+    .detail-list {
+      margin-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .ship-row,
+    .detail-row {
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .detail-row {
+      min-height: 54px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .option-thumbs {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .option-thumbs img {
+      width: 31px;
+      height: 31px;
+      border-radius: 5px;
+      object-fit: cover;
+      background: #f5f5f6;
+    }
+
+    .ship-row small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section {
+      background: #fff;
+      border-top: 8px solid #f3f3f5;
+      padding: 13px 12px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .section-title strong {
+      font-size: 15px;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .creator-grid {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .creator-grid::-webkit-scrollbar {
+      display: none;
+    }
+
+    .creator {
+      flex: 0 0 118px;
+      height: 182px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #ececef;
+      position: relative;
+      border: 0;
+      padding: 0;
+      scroll-snap-align: start;
+    }
+
+    .creator img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .creator::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 38%;
+      background: linear-gradient(transparent, rgba(0, 0, 0, .45));
+    }
+
+    .creator-label {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      z-index: 2;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .offer-scroll,
+    .store-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .offer-scroll::-webkit-scrollbar,
+    .store-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .offer {
+      flex: 0 0 310px;
+      min-height: 72px;
+      border: 1px solid #cfefef;
+      border-radius: 8px;
+      background: #effefe;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      scroll-snap-align: start;
+    }
+
+    .offer strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 15px;
+    }
+
+    .offer span {
+      color: #565862;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .offer button {
+      border: 0;
+      border-radius: 6px;
+      background: #19c5c1;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 9px 12px;
+    }
+
+    .offer.pink {
+      border-color: #ffd7df;
+      background: #fff5f7;
+    }
+
+    .offer.pink button {
+      background: var(--pink);
+    }
+
+    .rating-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 58px;
+      background: #fff;
+      border-top: 8px solid #f3f3f5;
+      padding: 0 12px;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .rating-strip .star {
+      color: var(--yellow);
+      font-size: 20px;
+    }
+
+    .rating-strip span:last-child {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .store-card {
+      flex: 0 0 118px;
+      scroll-snap-align: start;
+    }
+
+    .store-card img {
+      width: 118px;
+      height: 118px;
+      border-radius: 7px;
+      object-fit: cover;
+      background: #f4f4f5;
+      display: block;
+    }
+
+    .store-card strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 14px;
+    }
+
+    .store-card small {
+      display: inline-block;
+      margin-top: 3px;
+      color: var(--pink);
+      background: #fff0f3;
+      border-radius: 4px;
+      padding: 2px 5px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .review-card {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 0;
+    }
+
+    .review-head {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e6f5ff, #ffe9ef);
+      flex: 0 0 auto;
+    }
+
+    .stars {
+      color: var(--yellow);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    .review-card p,
+    .description p {
+      margin: 0;
+      color: #303138;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .recommend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .recommend {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .recommend img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .recommend div {
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .bottom {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      z-index: 20;
+      width: min(100%, 430px);
+      min-height: 64px;
+      display: grid;
+      grid-template-columns: 58px 1fr 1fr;
+      gap: 7px;
+      align-items: center;
+      padding: 8px 10px 10px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, .98);
+      backdrop-filter: blur(12px);
+    }
+
+    .bottom.checkout {
+      grid-template-columns: 1fr;
+    }
+
+    .mini-action {
+      height: 46px;
+      border: 0;
+      background: transparent;
+      color: #22232a;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      gap: 1px;
+    }
+
+    .mini-action b {
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .outline-btn,
+    .hot-btn {
+      height: 46px;
+      border: 0;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
+      padding: 0 10px;
+    }
+
+    .outline-btn {
+      background: #25262d;
+    }
+
+    .hot-btn {
+      background: var(--pink);
+    }
+
+    .hot-btn:hover {
+      background: var(--pink-dark);
+    }
+
+    .checkout-head {
+      height: 48px;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 12;
+    }
+
+    .checkout-head strong {
+      text-align: center;
+      font-size: 15px;
+    }
+
+    .option-media {
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 10px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .option-media img {
+      width: 86px;
+      height: 86px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #f4f4f5;
+    }
+
+    .option-media .price {
+      font-size: 22px;
+    }
+
+    .field-title {
+      padding: 15px 12px 8px;
+      font-size: 14px;
+      font-weight: 900;
+      background: #fff;
+    }
+
+    .flavors {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 0 12px 14px;
+      background: #fff;
+    }
+
+    .flavor {
+      position: relative;
+    }
+
+    .flavor input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .flavor span {
+      min-height: 42px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 1px solid #dedee3;
+      border-radius: 7px;
+      color: #33343b;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px;
+      background: #fff;
+    }
+
+    .flavor input:checked + span {
+      color: var(--pink);
+      border-color: var(--pink);
+      background: #fff3f5;
+    }
+
+    .qty-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 12px;
+      border-top: 8px solid #f3f3f5;
+      background: #fff;
+    }
+
+    .qty {
+      display: grid;
+      grid-template-columns: 38px 54px 38px;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .qty button,
+    .qty input {
+      height: 36px;
+      border: 1px solid #dedee3;
+      border-radius: 6px;
+      background: #fff;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .qty button {
+      font-size: 20px;
+    }
+
+    .summary,
+    .pay-card,
+    .address-card {
+      margin: 10px 10px 0;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .line:last-child {
+      border-bottom: 0;
+    }
+
+    .line .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .order-product {
+      display: grid;
+      grid-template-columns: 62px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .order-product img {
+      width: 62px;
+      height: 62px;
+      object-fit: cover;
+      border-radius: 7px;
+      background: #f4f4f5;
+    }
+
+    .order-product strong {
+      font-size: 13px;
+    }
+
+    .address-button {
+      width: 100%;
+      border: 0;
+      background: #fff;
+      text-align: left;
+      display: grid;
+      grid-template-columns: 24px 1fr 20px;
+      gap: 8px;
+      align-items: center;
+      padding: 12px;
+      color: #202128;
+    }
+
+    .address-button small {
+      display: block;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    .pix {
+      display: grid;
+      grid-template-columns: 36px 1fr 24px;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+    }
+
+    .pix-mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      background: #eafaf4;
+      color: #079a70;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    form {
+      padding: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .input {
+      display: grid;
+      gap: 5px;
+    }
+
+    .input label {
+      color: #555660;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .input input,
+    .input select {
+      width: 100%;
+      height: 43px;
+      border: 1px solid #dedee3;
+      border-radius: 6px;
+      padding: 0 10px;
+      background: #fff;
+      color: #15161a;
+    }
+
+    .input input:focus,
+    .input select:focus {
+      outline: 2px solid rgba(254, 44, 85, .16);
+      border-color: var(--pink);
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .save-default {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .switch {
+      width: 42px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--pink);
+      padding: 3px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .switch::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 84px;
+      transform: translateX(-50%) translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      width: min(90vw, 340px);
+      background: #17181d;
+      color: #fff;
+      border-radius: 999px;
+      padding: 11px 14px;
+      text-align: center;
+      font-size: 13px;
+      z-index: 50;
+      transition: .18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (min-width: 860px) {
+      .shell {
+        padding: 28px;
+        align-items: flex-start;
+      }
+
+      .app {
+        width: 430px;
+        min-height: calc(100vh - 56px);
+        max-height: 920px;
+        border-radius: 10px;
+        box-shadow: 0 22px 70px rgba(18, 19, 25, .15);
+        border: 1px solid #e1e1e5;
+        overflow-y: auto;
+      }
+
+      .bottom {
+        bottom: 28px;
+        border-right: 1px solid #e1e1e5;
+        border-left: 1px solid #e1e1e5;
+        border-bottom-right-radius: 10px;
+        border-bottom-left-radius: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="app">
+      <header class="top" id="productTop">
+        <div class="search-row">
+          <button class="icon" type="button" aria-label="Voltar">‹</button>
+          <div class="search">⌕ pesquisar produto</div>
+          <button class="icon" type="button" aria-label="Compartilhar">↗</button>
+          <button class="icon" type="button" aria-label="Sacola">⌂</button>
+        </div>
+        <nav class="tabs" aria-label="Abas">
+          <button class="tab active" type="button" data-pane="overview">Visão geral</button>
+          <button class="tab" type="button" data-pane="reviews">Avaliações</button>
+          <button class="tab" type="button" data-pane="description">Descrição</button>
+          <button class="tab" type="button" data-pane="recommend">Recomenda</button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="screen active" id="screen-product">
+          <div class="pane active" id="pane-overview">
+            <div class="hero" id="heroGallery">
+              <img id="mainImage" src="images/product-1.jfif" alt="Produto">
+              <button class="gallery-btn prev" id="prevImage" type="button" aria-label="Foto anterior">&lsaquo;</button>
+              <button class="gallery-btn next" id="nextImage" type="button" aria-label="Proxima foto">&rsaquo;</button>
+              <span class="photo-count" id="photoCount">1/4</span>
+            </div>
+            <div class="product-block">
+              <div class="price-line">
+                <span class="price">R$ 10,97</span>
+                <span class="old">R$ 71,85</span>
+              </div>
+              <div class="deal">50% OFF + frete grátis</div>
+              <h1>Óleo essencial refrescante 2.0 para uso diário</h1>
+              <div class="sold">4,8 ★ · 1,2 mil vendidos · estoque limitado</div>
+              <div class="shipping">
+                <div class="ship-row">
+                  <b>▣</b>
+                  <span>Frete grátis</span>
+                  <small>chega em breve</small>
+                </div>
+                <div class="ship-row">
+                  <b>↺</b>
+                  <span>Troca e suporte pelo atendimento</span>
+                  <small>sem taxa</small>
+                </div>
+              </div>
+              <div class="detail-list">
+                <div class="detail-row">
+                  <b>▦</b>
+                  <div class="option-thumbs">
+                    <img src="images/product-1.jfif" alt="">
+                    <img src="images/product-2.jfif" alt="">
+                    <img src="images/product-3.jfif" alt="">
+                    <img src="images/product-4.jfif" alt="">
+                  </div>
+                  <span>4 opções ›</span>
+                </div>
+                <div class="detail-row">
+                  <b>▧</b>
+                  <span>Bônus de cashback de 2%</span>
+                  <span>›</span>
+                </div>
+                <div class="detail-row">
+                  <b>♢</b>
+                  <span>Proteção do cliente</span>
+                  <span>›</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">
+                <strong>Ofertas</strong>
+                <span>›</span>
+              </div>
+              <div class="offer-scroll">
+                <div class="offer">
+                  <div>
+                    <strong>Cupom de envio</strong>
+                    <span>Desconto no frete em pedidos acima de R$ 9</span>
+                  </div>
+                  <button type="button">Resgatar</button>
+                </div>
+                <div class="offer pink">
+                  <div>
+                    <strong>50% OFF</strong>
+                    <span>Oferta aplicada ao pedido de hoje</span>
+                  </div>
+                  <button type="button">Ativar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">
+                <strong>Vídeos de criadores</strong>
+                <span>›</span>
+              </div>
+              <div class="creator-grid">
+                <button class="creator image-choice" type="button" data-img="images/product-1.jfif"><img src="images/product-1.jfif" alt=""><span class="creator-label">Produto em uso</span></button>
+                <button class="creator image-choice" type="button" data-img="images/product-2.jfif"><img src="images/product-2.jfif" alt=""><span class="creator-label">Antes e depois</span></button>
+                <button class="creator image-choice" type="button" data-img="images/product-3.jfif"><img src="images/product-3.jfif" alt=""><span class="creator-label">Detalhes</span></button>
+                <button class="creator image-choice" type="button" data-img="images/product-4.jfif"><img src="images/product-4.jfif" alt=""><span class="creator-label">Ingredientes</span></button>
+              </div>
+            </div>
+
+            <div class="rating-strip">
+              <span class="star">★</span>
+              <span>4.6 | Avaliações dos clientes</span>
+              <span>›</span>
+            </div>
+          </div>
+
+          <div class="pane" id="pane-reviews">
+            <div class="section" style="border-top:0">
+              <div class="section-title">
+                <strong>Avaliações dos clientes</strong>
+                <span>›</span>
+              </div>
+              <div class="review-card">
+                <div class="review-head"><span class="avatar"></span><div><strong>Cliente verificado</strong><div class="stars">★★★★★</div></div></div>
+                <p>Chegou bem embalado, fragrância suave e sensação refrescante. Pelo preço valeu bastante.</p>
+              </div>
+              <div class="review-card">
+                <div class="review-head"><span class="avatar"></span><div><strong>Compra confirmada</strong><div class="stars">★★★★★</div></div></div>
+                <p>Gostei do tamanho e da praticidade. Atendimento rápido para confirmar o pedido.</p>
+              </div>
+              <div class="review-card">
+                <div class="review-head"><span class="avatar"></span><div><strong>Avaliação recente</strong><div class="stars">★★★★☆</div></div></div>
+                <p>Produto igual ao anúncio. Frete grátis ajudou muito.</p>
+              </div>
+            </div>
+            <div class="section">
+              <div class="section-title">
+                <strong>Mais desta loja</strong>
+                <span>›</span>
+              </div>
+              <div class="store-scroll">
+                <div class="store-card"><img src="images/product-1.jfif" alt=""><strong>R$ 36,81</strong><small>-66%</small></div>
+                <div class="store-card"><img src="images/product-2.jfif" alt=""><strong>R$ 71,85</strong><small>-52%</small></div>
+                <div class="store-card"><img src="images/product-3.jfif" alt=""><strong>R$ 10,97</strong><small>-50%</small></div>
+                <div class="store-card"><img src="images/product-4.jfif" alt=""><strong>R$ 63,90</strong><small>-30%</small></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pane" id="pane-description">
+            <div class="section description" style="border-top:0">
+              <div class="section-title">
+                <strong>Descrição</strong>
+                <span>Detalhes</span>
+              </div>
+              <p>Óleo essencial refrescante em embalagem compacta, ideal para carregar no dia a dia. Escolha o sabor, informe a quantidade e finalize pelo Pix com confirmação no WhatsApp.</p>
+            </div>
+            <div class="hero"><img src="images/product-3.jfif" alt="Detalhe do produto"></div>
+            <div class="section description">
+              <p>Ingredientes selecionados, aroma agradável e aplicação prática. A disponibilidade pode variar conforme o sabor escolhido.</p>
+            </div>
+          </div>
+
+          <div class="pane" id="pane-recommend">
+            <div class="section" style="border-top:0">
+              <div class="section-title">
+                <strong>Recomendações</strong>
+                <span>Mais opções</span>
+              </div>
+              <div class="recommend-grid">
+                <div class="recommend"><img src="images/product-1.jfif" alt=""><div>Kit refrescante</div></div>
+                <div class="recommend"><img src="images/product-2.jfif" alt=""><div>Essência suave</div></div>
+                <div class="recommend"><img src="images/product-3.jfif" alt=""><div>Versão natural</div></div>
+                <div class="recommend"><img src="images/product-4.jfif" alt=""><div>Oferta especial</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-options">
+          <div class="checkout-head">
+            <button class="icon" type="button" data-go="product">‹</button>
+            <strong>Comprar agora</strong>
+            <span></span>
+          </div>
+          <div class="option-media">
+            <img src="images/product-1.jfif" alt="Produto">
+            <div>
+              <div class="price">R$ 10,97</div>
+              <div class="sold">Frete grátis · Pix · envio após confirmação</div>
+            </div>
+          </div>
+          <div class="field-title">Sabor</div>
+          <div class="flavors" id="flavors">
+            <label class="flavor"><input type="radio" name="flavor" value="Menta refrescante" checked><span>Menta refrescante</span></label>
+            <label class="flavor"><input type="radio" name="flavor" value="Melancia e menta"><span>Melancia e menta</span></label>
+            <label class="flavor"><input type="radio" name="flavor" value="Uva gelada"><span>Uva gelada</span></label>
+            <label class="flavor"><input type="radio" name="flavor" value="Natural"><span>Natural</span></label>
+          </div>
+          <div class="qty-row">
+            <strong>Quantidade</strong>
+            <div class="qty">
+              <button type="button" id="minus">−</button>
+              <input id="qty" type="number" min="1" step="1" value="1">
+              <button type="button" id="plus">+</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-checkout">
+          <div class="checkout-head">
+            <button class="icon" type="button" data-go="options">‹</button>
+            <strong>Finalizar pedido</strong>
+            <span></span>
+          </div>
+
+          <div class="address-card">
+            <button class="address-button" id="addressButton" type="button">
+              <span>⌖</span>
+              <span id="addressPreview"><b>Adicionar endereço</b><small>Informe os dados para entrega</small></span>
+              <span>›</span>
+            </button>
+          </div>
+
+          <div class="summary">
+            <div class="order-product">
+              <img src="images/product-1.jfif" alt="Produto">
+              <div>
+                <strong>Óleo essencial refrescante</strong>
+                <div class="line muted" style="display:block;padding:4px 0 0;border:0" id="variantText">Menta refrescante · Qtd 1</div>
+              </div>
+              <strong id="productTotal">R$ 10,97</strong>
+            </div>
+            <div class="line"><span>Subtotal</span><span id="subtotal">R$ 10,97</span></div>
+            <div class="line"><span>Frete</span><strong style="color:var(--green)">Grátis</strong></div>
+            <div class="line"><strong>Total</strong><strong id="total">R$ 10,97</strong></div>
+          </div>
+
+          <div class="pay-card">
+            <div class="pix">
+              <span class="pix-mark">Pix</span>
+              <div><strong>Pix</strong><div class="sold">Única forma de pagamento disponível</div></div>
+              <strong>✓</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-address">
+          <div class="checkout-head">
+            <button class="icon" type="button" data-go="checkout">‹</button>
+            <strong>Adicionar endereço</strong>
+            <span></span>
+          </div>
+          <form id="addressForm">
+            <div class="form-grid">
+              <div class="input"><label for="name">Nome completo</label><input id="name" name="name" autocomplete="name" required></div>
+              <div class="two">
+                <div class="input"><label for="phone">Telefone</label><input id="phone" name="phone" autocomplete="tel" required></div>
+                <div class="input"><label for="cpf">CPF</label><input id="cpf" name="cpf" inputmode="numeric"></div>
+              </div>
+              <div class="two">
+                <div class="input"><label for="cep">CEP</label><input id="cep" name="cep" autocomplete="postal-code" required></div>
+                <div class="input">
+                  <label for="state">Estado</label>
+                  <select id="state" name="state" required>
+                    <option value="">Selecione</option>
+                    <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option>
+                    <option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option>
+                    <option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                    <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option>
+                    <option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option>
+                    <option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                    <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input"><label for="city">Cidade</label><input id="city" name="city" autocomplete="address-level2" required></div>
+              <div class="input"><label for="district">Bairro</label><input id="district" name="district" required></div>
+              <div class="input"><label for="street">Rua / Avenida</label><input id="street" name="street" autocomplete="address-line1" required></div>
+              <div class="two">
+                <div class="input"><label for="number">Número</label><input id="number" name="number" required></div>
+                <div class="input"><label for="complement">Complemento</label><input id="complement" name="complement"></div>
+              </div>
+              <div class="input"><label for="reference">Ponto de referência</label><input id="reference" name="reference"></div>
+              <div class="save-default"><span>Definir como padrão</span><span class="switch"></span></div>
+            </div>
+          </form>
+        </section>
+      </main>
+
+      <footer class="bottom" id="bottom">
+        <button class="mini-action" type="button"><b>♡</b><span>Chat</span></button>
+        <button class="outline-btn" type="button" id="cartBtn">Adicionar</button>
+        <button class="hot-btn" type="button" id="mainBtn">Comprar agora</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const PRICE = 10.97;
+    const PHONE = "5541988675137";
+    const screens = {
+      product: document.getElementById("screen-product"),
+      options: document.getElementById("screen-options"),
+      checkout: document.getElementById("screen-checkout"),
+      address: document.getElementById("screen-address")
+    };
+    const productTop = document.getElementById("productTop");
+    const bottom = document.getElementById("bottom");
+    const mainBtn = document.getElementById("mainBtn");
+    const cartBtn = document.getElementById("cartBtn");
+    const qty = document.getElementById("qty");
+    const addressForm = document.getElementById("addressForm");
+    let current = "product";
+
+    const money = value => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    function toast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    function quantity() {
+      const value = Math.floor(Number(qty.value));
+      if (!value || value < 1) {
+        qty.value = 1;
+        return 1;
+      }
+      qty.value = value;
+      return value;
+    }
+
+    function flavor() {
+      return document.querySelector("input[name='flavor']:checked").value;
+    }
+
+    function address() {
+      const raw = localStorage.getItem("orderAddress");
+      return raw ? JSON.parse(raw) : null;
+    }
+
+    function renderAddress() {
+      const data = address();
+      const preview = document.getElementById("addressPreview");
+      if (!data) {
+        preview.innerHTML = "<b>Adicionar endereço</b><small>Informe os dados para entrega</small>";
+        return;
+      }
+      preview.innerHTML = `<b>${data.name}</b><small>${data.street}, ${data.number} - ${data.city}/${data.state}</small>`;
+    }
+
+    function renderTotals() {
+      const q = quantity();
+      const total = PRICE * q;
+      document.getElementById("variantText").textContent = `${flavor()} · Qtd ${q}`;
+      document.getElementById("productTotal").textContent = money(total);
+      document.getElementById("subtotal").textContent = money(total);
+      document.getElementById("total").textContent = money(total);
+    }
+
+    function go(screen) {
+      current = screen;
+      Object.entries(screens).forEach(([name, el]) => el.classList.toggle("active", name === screen));
+      productTop.style.display = screen === "product" ? "block" : "none";
+      bottom.classList.toggle("checkout", screen !== "product");
+      bottom.querySelectorAll(".mini-action, #cartBtn").forEach(el => el.style.display = screen === "product" ? "" : "none");
+
+      if (screen === "product") mainBtn.textContent = "Comprar agora";
+      if (screen === "options") mainBtn.textContent = "Comprar agora";
+      if (screen === "checkout") {
+        renderTotals();
+        renderAddress();
+        mainBtn.textContent = "Fazer pedido";
+      }
+      if (screen === "address") mainBtn.textContent = "Salvar";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+        document.querySelectorAll(".pane").forEach(el => el.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(`pane-${tab.dataset.pane}`).classList.add("active");
+      });
+    });
+
+    const imageChoices = Array.from(document.querySelectorAll(".image-choice"));
+    const productImages = imageChoices.map(button => button.dataset.img);
+    const mainImage = document.getElementById("mainImage");
+    const photoCount = document.getElementById("photoCount");
+    const heroGallery = document.getElementById("heroGallery");
+    let currentImageIndex = 0;
+    let touchStartX = 0;
+
+    function showProductImage(index, shouldScroll = false) {
+      currentImageIndex = (index + productImages.length) % productImages.length;
+      mainImage.src = productImages[currentImageIndex];
+      photoCount.textContent = `${currentImageIndex + 1}/${productImages.length}`;
+      if (shouldScroll) window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    imageChoices.forEach((button, index) => {
+      button.addEventListener("click", () => showProductImage(index, true));
+    });
+
+    mainImage.addEventListener("click", () => showProductImage(currentImageIndex + 1));
+    document.getElementById("prevImage").addEventListener("click", () => showProductImage(currentImageIndex - 1));
+    document.getElementById("nextImage").addEventListener("click", () => showProductImage(currentImageIndex + 1));
+    heroGallery.addEventListener("touchstart", event => {
+      touchStartX = event.changedTouches[0].clientX;
+    }, { passive: true });
+    heroGallery.addEventListener("touchend", event => {
+      const distance = event.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(distance) < 40) return;
+      showProductImage(currentImageIndex + (distance < 0 ? 1 : -1));
+    });
+
+    document.querySelectorAll("[data-go]").forEach(button => {
+      button.addEventListener("click", () => go(button.dataset.go));
+    });
+
+    document.getElementById("minus").addEventListener("click", () => {
+      qty.value = Math.max(1, quantity() - 1);
+      renderTotals();
+    });
+
+    document.getElementById("plus").addEventListener("click", () => {
+      qty.value = quantity() + 1;
+      renderTotals();
+    });
+
+    qty.addEventListener("input", renderTotals);
+    document.getElementById("flavors").addEventListener("change", renderTotals);
+    document.getElementById("addressButton").addEventListener("click", () => go("address"));
+    cartBtn.addEventListener("click", () => {
+      toast("Produto adicionado.");
+      go("options");
+    });
+
+    mainBtn.addEventListener("click", () => {
+      if (current === "product") return go("options");
+      if (current === "options") return go("checkout");
+      if (current === "address") {
+        if (!addressForm.reportValidity()) return;
+        localStorage.setItem("orderAddress", JSON.stringify(Object.fromEntries(new FormData(addressForm).entries())));
+        toast("Endereço salvo.");
+        return go("checkout");
+      }
+
+      const data = address();
+      if (!data) {
+        toast("Adicione o endereço.");
+        return go("address");
+      }
+
+      const q = quantity();
+      const complement = data.complement ? `, complemento ${data.complement}` : "";
+      const reference = data.reference ? `\nReferência: ${data.reference}` : "";
+      const message = [
+        "Olá! Quero confirmar meu pedido.",
+        "",
+        "Produto: Óleo essencial refrescante",
+        `Sabor: ${flavor()}`,
+        `Quantidade: ${q}`,
+        `Total: ${money(PRICE * q)}`,
+        "Frete: grátis",
+        "Pagamento: Pix",
+        "",
+        "Endereço:",
+        `${data.name} - ${data.phone}`,
+        `${data.street}, ${data.number}${complement}`,
+        `${data.district} - ${data.city}/${data.state}`,
+        `CEP: ${data.cep}`,
+        reference
+      ].filter(Boolean).join("\n");
+      window.location.href = `https://wa.me/${PHONE}?text=${encodeURIComponent(message)}`;
+    });
+
+    const saved = address();
+    if (saved) {
+      Object.entries(saved).forEach(([key, value]) => {
+        if (addressForm.elements[key]) addressForm.elements[key].value = value;
+      });
+    }
+    renderTotals();
+    renderAddress();
+  </script>
+</body>
+</html>
